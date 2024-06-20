@@ -1,0 +1,14 @@
+name: checking
+on: push
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: my-step_0
+        run: pip install poetry
+      - name: my-step_1
+        run: poetry install
+      - name: my-step_2
+        run: poetry run flake8 page_analyzer
