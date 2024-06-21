@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "hexlet-code"
+version = "0.1.0"
+description = ""
+authors = ["Igor Cherkashov <cherkashov270999@gmail.com>"]
+readme = "README.md"
+packages = [
+  { include = "page_analyzer" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+flask = "^3.0.3"
+flake8 = "^7.1.0"
+python-dotenv = "^1.0.1"
+gunicorn = "^22.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+page_analyzer = "page_analyzer.app:main"
