@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS urls (id INT PRIMARY KEY, name VARCHAR, created_at TIMESTAMP);
+
+
