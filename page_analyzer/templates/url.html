@@ -24,11 +24,19 @@
 
   <main class="flex-grow-1">
     {% if messages %}
-      <ul class=flashes>
-      {% for category, message in messages %}
-        <li class="{{ category }}">{{ message }}</li>
-      {% endfor %}
-      </ul>
+      {% if messages[0][0] == 'success' %}
+        <div>
+          <div class="alert alert-success" role="alert">
+            {{ messages[0][1] }}
+          </div>
+        </div>
+      {% elif messages[0][0] == 'warning' %}
+        <div>
+          <div class="alert alert-primary" role="alert">
+            {{ messages[0][1] }}
+          </div>
+        </div>
+      {% endif %}
     {% endif %}
     <div class="container-lg mt-3">
       <h1>Сайт: {{ site.name }}</h1>

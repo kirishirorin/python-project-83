@@ -1,7 +1,8 @@
-from flask import Flask, url_for, render_template, flash, get_flashed_messages
+from flask import Flask, url_for, render_template, flash, get_flashed_messages, request, redirect
 from dotenv import load_dotenv
 from validators import url
 from psycopg2.extras import RealDictCursor
+from urllib.parse import urlparse
 import os
 import psycopg2
 import datetime
@@ -32,30 +33,28 @@ def sites():
 
 @app.post('/urls')
 def urls_post():
-    url = request.form.to_dict()['url']
-    correct_url = url(url)
+    url_ = str(request.form.to_dict()['url'])
+    sort_url = urlparse(url_).scheme + '//' + urlparse(url_).netloc
+    correct_url = url(url_)
     if not correct_url:
         flash('Некорректный URL', 'error')
         return redirect(url_for('index'))
     conn = psycopg2.connect(DATABASE_URL)
-    with conn.cursor as cursor:
+    with conn.cursor() as cursor:
         select_query = 'SELECT name FROM urls;'
         cursor.execute(select_query)
         names = (tumple[0] for tumple in cursor.fetchall())
-        if url in names:
-            select_query = 'SELECT id FROM urls WHERE name == %s;'
-            cursor.execute(select_query, (url))
-            id = cursor.fetchone()[0]
+        if sort_url in names:
             flash('Страница уже существует', 'warning')
         else:
             insert_query = 'INSERT INTO urls (name, created_at) VALUES (%s, %s);'
             now_time = datetime.datetime.now()
-            cursor.execute(insert_query, (url, now_time))
+            cursor.execute(insert_query, (sort_url, now_time))
             conn.commit()
-            select_query = 'SELECT id FROM urls WHERE name == %s;'
-            cursor.execute(select_query, (url))
-            id = cursor.fetchone()[0]
             flash('Страница успешно добавлена', 'success')
+        select_query = 'SELECT id FROM urls WHERE name = %s;'
+        cursor.execute(select_query, (sort_url,))
+        id = cursor.fetchone()[0]
     conn.close()
     return redirect(url_for('url_id', id=id))
 
@@ -63,7 +62,7 @@ def urls_post():
 def url_id(id):
     messages = get_flashed_messages(with_categories=True)
     conn = psycopg2.connect(DATABASE_URL)
-    with conn.cursor as cursor:
+    with conn.cursor() as cursor:
         select_query = 'SELECT * FROM urls WHERE id = %s;'
         cursor.execute(select_query, (id))
         result = cursor.fetchone()
