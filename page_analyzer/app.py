@@ -3,9 +3,9 @@ from dotenv import load_dotenv
 from validators import url
 from psycopg2.extras import RealDictCursor
 from urllib.parse import urlparse
+from datetime import date
 import os
 import psycopg2
-import datetime
 
 
 
@@ -24,10 +24,10 @@ def index():
 @app.get('/urls')
 def sites():
     conn = psycopg2.connect(DATABASE_URL)
-    with conn.cursor() as cursor:
-        select_query = 'SELECT id, name FROM urls ORDER BY created_at DESC;'
+    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+        select_query = 'SELECT urls.id AS id, urls.name AS name, MAX(url_checks.created_at) AS created_at FROM urls LEFT JOIN url_checks ON urls.id = url_checks.url_id GROUP BY urls.id;'
         cursor.execute(select_query)
-        sites = [{'id': id, 'name': name} for id, name in cursor.fetchall()]
+        sites = cursor.fetchall()
     conn.close()
     return render_template('sites.html', sites=sites)
 
@@ -48,8 +48,8 @@ def urls_post():
             flash('Страница уже существует', 'warning')
         else:
             insert_query = 'INSERT INTO urls (name, created_at) VALUES (%s, %s);'
-            now_time = datetime.datetime.now()
-            cursor.execute(insert_query, (sort_url, now_time))
+            created_at = date.today()
+            cursor.execute(insert_query, (sort_url, created_at))
             conn.commit()
             flash('Страница успешно добавлена', 'success')
         select_query = 'SELECT id FROM urls WHERE name = %s;'
@@ -62,10 +62,28 @@ def urls_post():
 def url_id(id):
     messages = get_flashed_messages(with_categories=True)
     conn = psycopg2.connect(DATABASE_URL)
-    with conn.cursor() as cursor:
+    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
         select_query = 'SELECT * FROM urls WHERE id = %s;'
-        cursor.execute(select_query, (id))
-        result = cursor.fetchone()
-        site = {'id': result[0], 'name': result[1], 'created_at': result[2]}
+        cursor.execute(select_query, (id,))
+        site = cursor.fetchone()
+        select_query = 'SELECT id, status_code, h1, title, description, created_at FROM url_checks WHERE url_id = %s ORDER BY created_at DESC;'
+        cursor.execute(select_query, (id,))
+        checks = cursor.fetchall()
     conn.close()
-    return render_template('url.html', site=site, messages=messages)
+    return render_template('url.html', site=site, messages=messages, checks=checks)
+
+@app.post('/urls/<id>/checks')
+def urls_checks(id):
+    conn = psycopg2.connect(DATABASE_URL)
+    with conn.cursor() as cursor:
+        select_query = 'INSERT INTO url_checks (url_id, status_code, h1, title, description, created_at) VALUES (%s, %s, %s, %s, %s, %s);'
+        created_at = date.today()
+        status_code = 0
+        h1 = ''
+        title = ''
+        description = ''
+        cursor.execute(select_query, (id, status_code, h1, title, description, created_at))
+        conn.commit()
+        flash('Страница успешно проверена', 'success')
+    conn.close()
+    return redirect(url_for('url_id', id=id))

@@ -62,7 +62,7 @@
   </div>
 
     <h2 class="mt-5 mb-3">Проверки</h2>
-    <form method="post" action="/urls/2/checks">
+    <form method="post" action="{{ url_for('urls_checks', id=site.id) }}">
     <input type="submit" class="btn btn-primary" value="Запустить проверку">
     </form>
     
@@ -78,8 +78,19 @@
         <th>Дата создания</th>
       </tr>
     </thead>
-      <tbody>
-    
+    <tbody>
+    {% if checks %}
+    {% for check in checks %}
+      <tr>
+        <td>{{ check.id }}</td>
+        <td>{{ check.status_code }}</td>
+        <td>{{ check.h1 }}</td>
+        <td>{{ check.title }}</td>
+        <td>{{ check.description }}</td>
+        <td>{{ check.created_at }}</td>
+      </tr>
+    {% endfor %}
+    {% endif %}
     </tbody>
     </table>
   </div>

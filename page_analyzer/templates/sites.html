@@ -30,22 +30,22 @@
 <div class="table-responsive">
   <table class="table table-bordered table-hover text-nowrap" data-test="urls">
     <thead>
-    <tr>
-      <th>ID</th>
-      <th>Имя</th>
-      <th>Последняя проверка</th>
-      <th>Код ответа</th>
-    </tr>
+      <tr>
+        <th>ID</th>
+        <th>Имя</th>
+        <th>Последняя проверка</th>
+        <th>Код ответа</th>
+      </tr>
     </thead>
     <tbody>
     {% if sites %}
     {% for site in sites %}
-    <tr>
-      <th>{{ site.id }}</th>
-      <th>{{ site.name }}</th>
-      <th></th>
-      <th></th>
-    </tr>
+      <tr>
+        <td>{{ site.id }}</td>
+        <td><a href="{{ url_for('url_id', id=site.id) }}">{{ site.name }}</a></td>
+        <td>{{ site.created_at}}</td>
+        <td></td>
+      </tr>
     {% endfor %}
     {% endif %}
     </tbody>
