@@ -4,8 +4,10 @@ from validators import url
 from psycopg2.extras import RealDictCursor
 from urllib.parse import urlparse
 from datetime import date
+from bs4 import BeautifulSoup
 import os
 import psycopg2
+import requests
 
 
 
@@ -25,7 +27,7 @@ def index():
 def sites():
     conn = psycopg2.connect(DATABASE_URL)
     with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-        select_query = 'SELECT urls.id AS id, urls.name AS name, MAX(url_checks.created_at) AS created_at FROM urls LEFT JOIN url_checks ON urls.id = url_checks.url_id GROUP BY urls.id;'
+        select_query = 'SELECT urls.id AS id, urls.name AS name, url_checks.status_code AS status_code, MAX(url_checks.created_at) AS created_at FROM urls LEFT JOIN url_checks ON urls.id = url_checks.url_id GROUP BY urls.id, url_checks.status_code ORDER BY id DESC;'
         cursor.execute(select_query)
         sites = cursor.fetchall()
     conn.close()
@@ -34,7 +36,7 @@ def sites():
 @app.post('/urls')
 def urls_post():
     url_ = str(request.form.to_dict()['url'])
-    sort_url = urlparse(url_).scheme + '//' + urlparse(url_).netloc
+    sort_url = urlparse(url_).scheme + '://' + urlparse(url_).netloc
     correct_url = url(url_)
     if not correct_url:
         flash('Некорректный URL', 'error')
@@ -66,7 +68,7 @@ def url_id(id):
         select_query = 'SELECT * FROM urls WHERE id = %s;'
         cursor.execute(select_query, (id,))
         site = cursor.fetchone()
-        select_query = 'SELECT id, status_code, h1, title, description, created_at FROM url_checks WHERE url_id = %s ORDER BY created_at DESC;'
+        select_query = 'SELECT id, status_code, h1, title, description, created_at FROM url_checks WHERE url_id = %s ORDER BY id DESC;'
         cursor.execute(select_query, (id,))
         checks = cursor.fetchall()
     conn.close()
@@ -75,13 +77,28 @@ def url_id(id):
 @app.post('/urls/<id>/checks')
 def urls_checks(id):
     conn = psycopg2.connect(DATABASE_URL)
+    created_at = date.today()
+    with conn.cursor() as cursor:
+        select_query = 'SELECT name FROM urls WHERE id = %s;'
+        cursor.execute(select_query, (id,))
+        site = cursor.fetchone()[0]
+    try:
+        status_code = requests.get(site).status_code
+    except:
+        flash('Произошла ошибка при проверке', 'error')
+        return redirect(url_for('url_id', id=id))
     with conn.cursor() as cursor:
         select_query = 'INSERT INTO url_checks (url_id, status_code, h1, title, description, created_at) VALUES (%s, %s, %s, %s, %s, %s);'
-        created_at = date.today()
-        status_code = 0
-        h1 = ''
-        title = ''
+        response = requests.get(site)
+        soup = BeautifulSoup(response.text, 'lxml')
+        h1 = soup.find('h1').text if soup.find('h1') else ''
+        title = soup.find('title').text if soup.find('title') else ''
         description = ''
+        metas = soup.find_all('meta')
+        for i in metas:
+            if i.get('name', '') == 'description':
+                description = i['content']
+                break
         cursor.execute(select_query, (id, status_code, h1, title, description, created_at))
         conn.commit()
         flash('Страница успешно проверена', 'success')
