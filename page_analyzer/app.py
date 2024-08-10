@@ -90,7 +90,7 @@ def url_id(id):
         checks = cursor.fetchall()
     conn.close()
     return render_template('url.html', site=site,
-                            messages=messages, checks=checks)
+                           messages=messages, checks=checks)
 
 
 @app.post('/urls/<id>/checks')
@@ -109,7 +109,7 @@ def urls_checks(id):
     with conn.cursor() as cursor:
         select_query = '''INSERT INTO url_checks
                           (url_id, status_code, h1,
-                           title, description, created_at)
+                          title, description, created_at)
                           VALUES (%s, %s, %s, %s, %s, %s);'''
         response = requests.get(site)
         soup = BeautifulSoup(response.text, 'lxml')
@@ -122,7 +122,7 @@ def urls_checks(id):
                 description = i['content']
                 break
         cursor.execute(select_query,
-                      (id, status_code, h1, title, description, created_at))
+                       (id, status_code, h1, title, description, created_at))
         conn.commit()
         flash('Страница успешно проверена', 'success')
     conn.close()
