@@ -36,6 +36,12 @@
             {{ messages[0][1] }}
           </div>
         </div>
+      {% elif messages[0][0] == 'error' %}
+        <div>
+          <div class="alert alert-danger" role="alert">
+            {{ messages[0][1] }}
+          </div>
+        </div>
       {% endif %}
     {% endif %}
     <div class="container-lg mt-3">
