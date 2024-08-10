@@ -31,7 +31,8 @@ def sites():
     with conn.cursor(cursor_factory=RealDictCursor) as cursor:
         select_query = '''SELECT
                           urls.id AS id, urls.name AS name,
-                          url_checks.status_code AS status_code, MAX(url_checks.created_at) AS created_at
+                          url_checks.status_code AS status_code,
+                          MAX(url_checks.created_at) AS created_at
                           FROM urls
                           LEFT JOIN url_checks
                           ON urls.id = url_checks.url_id
@@ -59,7 +60,8 @@ def urls_post():
         if sort_url in names:
             flash('Страница уже существует', 'warning')
         else:
-            insert_query = 'INSERT INTO urls (name, created_at) VALUES (%s, %s);'
+            insert_query = '''INSERT INTO urls (name, created_at)
+                            VALUES (%s, %s);'''
             created_at = date.today()
             cursor.execute(insert_query, (sort_url, created_at))
             conn.commit()
@@ -79,14 +81,16 @@ def url_id(id):
         select_query = 'SELECT * FROM urls WHERE id = %s;'
         cursor.execute(select_query, (id,))
         site = cursor.fetchone()
-        select_query = '''SELECT id, status_code, h1, title, description, created_at
+        select_query = '''SELECT id, status_code, h1, title,
+                          description, created_at
                           FROM url_checks
                           WHERE url_id = %s
                           ORDER BY id DESC;'''
         cursor.execute(select_query, (id,))
         checks = cursor.fetchall()
     conn.close()
-    return render_template('url.html', site=site, messages=messages, checks=checks)
+    return render_template('url.html', site=site,
+                            messages=messages, checks=checks)
 
 
 @app.post('/urls/<id>/checks')
@@ -104,7 +108,8 @@ def urls_checks(id):
         return redirect(url_for('url_id', id=id))
     with conn.cursor() as cursor:
         select_query = '''INSERT INTO url_checks
-                          (url_id, status_code, h1, title, description, created_at)
+                          (url_id, status_code, h1,
+                           title, description, created_at)
                           VALUES (%s, %s, %s, %s, %s, %s);'''
         response = requests.get(site)
         soup = BeautifulSoup(response.text, 'lxml')
@@ -116,7 +121,8 @@ def urls_checks(id):
             if i.get('name', '') == 'description':
                 description = i['content']
                 break
-        cursor.execute(select_query, (id, status_code, h1, title, description, created_at))
+        cursor.execute(select_query,
+                      (id, status_code, h1, title, description, created_at))
         conn.commit()
         flash('Страница успешно проверена', 'success')
     conn.close()
