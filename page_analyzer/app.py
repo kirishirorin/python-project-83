@@ -101,10 +101,11 @@ def urls_checks(id):
         select_query = 'SELECT name FROM urls WHERE id = %s;'
         cursor.execute(select_query, (id,))
         site = cursor.fetchone()[0]
+    try:
         status_code = requests.get(site).status_code
-        if status_code != 200:
-            flash('Произошла ошибка при проверке', 'error')
-            return redirect(url_for('url_id', id=id))
+    except Exception:
+        flash('Произошла ошибка при проверке', 'error')
+        return redirect(url_for('url_id', id=id))
     with conn.cursor() as cursor:
         select_query = '''INSERT INTO url_checks
                           (url_id, status_code, h1,
