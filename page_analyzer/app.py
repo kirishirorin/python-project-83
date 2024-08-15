@@ -126,6 +126,9 @@ def urls_checks(id):
         cursor.execute(select_query,
                        (id, status_code, h1, title, description, created_at))
         conn.commit()
-        flash('Страница успешно проверена', 'success')
+        if status_code != 200:
+            flash('Произошла ошибка при проверке', 'error')
+        else:
+            flash('Страница успешно проверена', 'success')
     conn.close()
     return redirect(url_for('url_id', id=id))
