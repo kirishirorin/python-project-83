@@ -53,7 +53,8 @@ def urls_post():
     correct_url = url(url_)
     if not correct_url:
         flash('Некорректный URL', 'error')
-        return redirect(url_for('index')), 422
+        messages = get_flashed_messages(with_categories=True)
+        return render_template('index.html', messages=messages), 422
     conn = psycopg2.connect(DATABASE_URL)
     with conn.cursor() as cursor:
         select_query = 'SELECT name FROM urls;'
