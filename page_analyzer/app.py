@@ -1,5 +1,5 @@
 from flask import Flask, url_for, render_template
-from flask import flash, get_flashed_messages, request, redirect
+from flask import flash, request, redirect
 from dotenv import load_dotenv
 from validators import url
 from urllib.parse import urlparse
@@ -11,8 +11,6 @@ import requests
 
 
 load_dotenv()
-
-
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 
@@ -108,7 +106,7 @@ def urls_checks(id):
     conn.insert(select_query,
                 (id, status_code, h1, title, description, created_at))
     if status_code != 200:
-       flash('Произошла ошибка при проверке', 'error')
+        flash('Произошла ошибка при проверке', 'error')
     else:
-       flash('Страница успешно проверена', 'success')
+        flash('Страница успешно проверена', 'success')
     return redirect(url_for('url_id', id=id))
