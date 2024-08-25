@@ -26,16 +26,8 @@ def index():
 @app.get('/urls')
 def sites():
     conn = DataBase(DATABASE_URL)
-    select_query = '''SELECT
-                      urls.id AS id, urls.name AS name,
-                      url_checks.status_code AS status_code,
-                      MAX(url_checks.created_at) AS created_at
-                      FROM urls
-                      LEFT JOIN url_checks
-                      ON urls.id = url_checks.url_id
-                      GROUP BY urls.id, url_checks.status_code
-                      ORDER BY id DESC;'''
-    sites = conn.select(select_query)
+    sites = conn.get_sites()
+    conn.close_conn()
     return render_template('sites.html', sites=sites)
 
 
@@ -48,32 +40,23 @@ def urls_post():
         flash('Некорректный URL', 'error')
         return render_template('index.html'), 422
     conn = DataBase(DATABASE_URL)
-    select_query = 'SELECT name FROM urls;'
-    names = (tumple['name'] for tumple in conn.select(select_query))
+    names = (tumple['name'] for tumple in conn.get_name_urls())
     if sort_url in names:
         flash('Страница уже существует', 'warning')
     else:
-        insert_query = '''INSERT INTO urls (name, created_at)
-                          VALUES (%s, %s);'''
-        created_at = date.today()
-        conn.insert(insert_query, (sort_url, created_at))
+        conn.add_url(sort_url)
         flash('Страница успешно добавлена', 'success')
-    select_query = 'SELECT id FROM urls WHERE name = %s;'
-    id = conn.select(select_query, (sort_url,))[0]['id']
-    return redirect(url_for('url_id', id=id))
+    id = conn.get_url_id(sort_url)
+    conn.close_conn()
+    return redirect(url_for('show_url', id=id))
 
 
 @app.get('/urls/<id>')
-def url_id(id):
+def show_url(id):
     conn = DataBase(DATABASE_URL)
-    select_query = 'SELECT * FROM urls WHERE id = %s;'
-    site = conn.select(select_query, (id,))[0]
-    select_query = '''SELECT id, status_code, h1, title,
-                      description, created_at
-                      FROM url_checks
-                      WHERE url_id = %s
-                      ORDER BY id DESC;'''
-    checks = conn.select(select_query, (id,))
+    site = conn.get_site(id)
+    checks = conn.get_checks(id)
+    conn.close_conn()
     return render_template('url.html', site=site,
                            checks=checks)
 
@@ -82,17 +65,12 @@ def url_id(id):
 def urls_checks(id):
     conn = DataBase(DATABASE_URL)
     created_at = date.today()
-    select_query = 'SELECT name FROM urls WHERE id = %s;'
-    site = conn.select(select_query, (id,))[0]['name']
+    site = conn.get_url_name(id)
     try:
         status_code = requests.get(site).status_code
     except Exception:
         flash('Произошла ошибка при проверке', 'error')
-        return redirect(url_for('url_id', id=id))
-    select_query = '''INSERT INTO url_checks
-                      (url_id, status_code, h1,
-                      title, description, created_at)
-                      VALUES (%s, %s, %s, %s, %s, %s);'''
+        return redirect(url_for('show_url', id=id))
     response = requests.get(site)
     soup = BeautifulSoup(response.text, 'lxml')
     h1 = soup.find('h1').text if soup.find('h1') else ''
@@ -103,10 +81,10 @@ def urls_checks(id):
         if i.get('name', '') == 'description':
             description = i['content']
             break
-    conn.insert(select_query,
-                (id, status_code, h1, title, description, created_at))
+    conn.add_checks(id, status_code, h1, title, description)
     if status_code != 200:
         flash('Произошла ошибка при проверке', 'error')
     else:
         flash('Страница успешно проверена', 'success')
-    return redirect(url_for('url_id', id=id))
+    conn.close_conn()
+    return redirect(url_for('show_url', id=id))

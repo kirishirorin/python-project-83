@@ -18,7 +18,7 @@
           {% for site in sites %}
             <tr>
               <td>{{ site.id }}</td>
-              <td><a href="{{ url_for('url_id', id=site.id) }}">{{ site.name }}</a></td>
+              <td><a href="{{ url_for('show_url', id=site.id) }}">{{ site.name }}</a></td>
               <td>{{ site.created_at }}</td>
               <td>{{ site.status_code }}</td>
             </tr>
