@@ -3,7 +3,6 @@ from datetime import date
 import psycopg2
 
 
-
 class DataBase():
     def __init__(self, DATABASE_URL):
         self.conn = psycopg2.connect(DATABASE_URL)
