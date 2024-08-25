@@ -3,7 +3,6 @@ from flask import flash, request, redirect
 from dotenv import load_dotenv
 from validators import url
 from urllib.parse import urlparse
-from datetime import date
 from bs4 import BeautifulSoup
 from page_analyzer.db import DataBase
 import os
@@ -64,7 +63,6 @@ def show_url(id):
 @app.post('/urls/<id>/checks')
 def urls_checks(id):
     conn = DataBase(DATABASE_URL)
-    created_at = date.today()
     site = conn.get_url_name(id)
     try:
         status_code = requests.get(site).status_code
