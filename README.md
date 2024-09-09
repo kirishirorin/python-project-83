@@ -14,6 +14,12 @@ Dependencies:
  8. requests = "^2.32.3"
  9. beautifulsoup4 = "^4.12.3"
 
+How to start using in command line:
+ 1. git clone https://github.com/kirishirorin/python-project-83.git
+ 2. pip install poetry
+ 3. poetry install
+ 4. make dev
+
 How to start using:
  1. Press on Web-site which is shown above
  2. In the main page you can type an url and then press "Проверить"

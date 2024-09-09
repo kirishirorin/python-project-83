@@ -1,50 +1,30 @@
 {% extends "base.html" %}
   {% block main %}
-    {% if get_flashed_messages(with_categories=True) %}
-    {% if get_flashed_messages(with_categories=True)[0][0] == 'success' %}
-      <div>
-        <div class="alert alert-success" role="alert">
-          {{ get_flashed_messages(with_categories=True)[0][1] }}
-        </div>
-      </div>
-    {% elif get_flashed_messages(with_categories=True)[0][0] == 'warning' %}
-      <div>
-        <div class="alert alert-primary" role="alert">
-          {{ get_flashed_messages(with_categories=True)[0][1] }}
-        </div>
-      </div>
-    {% elif get_flashed_messages(with_categories=True)[0][0] == 'error' %}
-      <div>
-        <div class="alert alert-danger" role="alert">
-          {{ get_flashed_messages(with_categories=True)[0][1] }}
-        </div>
-      </div>
-    {% endif %}
-    {% endif %}
+    {% include "messages.html" %}
     <div class="container-lg mt-3">
-      <h1>Сайт: {{ site.name }}</h1>
+      <h1>Сайт: {{ url.name }}</h1>
 
       <div class="table-responsive">
         <table class="table table-bordered table-hover text-nowrap" data-test="url">
           <tbody>
             <tr>
               <td>ID</td>
-              <td>{{ site.id }}</td>
+              <td>{{ url.id }}</td>
             </tr>
             <tr>
               <td>Имя</td>
-              <td>{{ site.name }}</td>
+              <td>{{ url.name }}</td>
             </tr>
             <tr>
               <td>Дата создания</td>
-              <td>{{ site.created_at }}</td>
+              <td>{{ url.created_at }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <h2 class="mt-5 mb-3">Проверки</h2>
-      <form method="post" action="{{ url_for('urls_checks', id=site.id) }}">
+      <form method="post" action="{{ url_for('urls_checks', id=url.id) }}">
         <input type="submit" class="btn btn-primary" value="Запустить проверку">
       </form>
     
@@ -61,15 +41,15 @@
           </tr>
         </thead>
         <tbody>
-        {% if checks %}
-        {% for check in checks %}
+        {% if url_checks %}
+        {% for url_check in url_checks %}
           <tr>
-            <td>{{ check.id }}</td>
-            <td>{{ check.status_code }}</td>
-            <td>{{ check.h1 }}</td>
-            <td>{{ check.title }}</td>
-            <td>{{ check.description }}</td>
-            <td>{{ check.created_at }}</td>
+            <td>{{ url_check.id }}</td>
+            <td>{{ url_check.status_code }}</td>
+            <td>{{ url_check.h1 }}</td>
+            <td>{{ url_check.title }}</td>
+            <td>{{ url_check.description }}</td>
+            <td>{{ url_check.created_at }}</td>
           </tr>
         {% endfor %}
         {% endif %}
