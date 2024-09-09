@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 
+
 def get_status_code(url):
     status_code = requests.get(url).status_code
     return status_code
