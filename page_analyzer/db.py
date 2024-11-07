@@ -3,7 +3,7 @@ from datetime import date
 import psycopg2
 
 
-class DataBase():
+class Database():
     def __init__(self, DATABASE_URL):
         self.conn = psycopg2.connect(DATABASE_URL)
 
@@ -24,12 +24,12 @@ class DataBase():
                 cursor.execute(query)
             self.conn.commit()
 
-    def get_site(self, url_id):
+    def get_url(self, url_id):
         select_query = 'SELECT * FROM urls WHERE id = %s;'
         url = self.select(select_query, (url_id,))[0]
         return url
 
-    def get_sites(self):
+    def get_urls(self):
         select_query_urls = '''SELECT id, name
                                FROM urls
                                ORDER BY id DESC;'''
@@ -54,22 +54,19 @@ class DataBase():
                 total_urls.append(url)
         return total_urls
 
-    def get_name_urls(self):
-        select_query = 'SELECT name FROM urls;'
-        names = self.select(select_query)
-        return names
-
-    def get_url_name(self, url_id):
-        select_query = 'SELECT name FROM urls WHERE id = %s;'
-        url = self.select(select_query, (url_id,))[0].name
-        return url
+    def get_url_by_name(self, name):
+        select_query = 'SELECT COUNT(name) FROM urls WHERE name = %s;'
+        answer = self.select(select_query, (name,))
+        if answer == 0:
+            return False
+        return True
 
     def get_url_id(self, name):
         select_query = 'SELECT id FROM urls WHERE name = %s;'
         url_id = self.select(select_query, (name,))[0].id
         return url_id
 
-    def get_checks(self, url_check_id):
+    def get_url_checks(self, url_check_id):
         select_query = '''SELECT id, status_code, h1, title,
                           description, created_at
                           FROM url_checks
@@ -84,7 +81,7 @@ class DataBase():
         created_at = date.today()
         self.insert(insert_query, (name, created_at))
 
-    def add_checks(self, url_id, status_code, h1, title, description):
+    def add_url_checks(self, url_id, status_code, h1, title, description):
         insert_query = '''INSERT INTO url_checks
                           (url_id, status_code, h1,
                           title, description, created_at)

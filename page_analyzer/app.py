@@ -3,7 +3,7 @@ from flask import flash, request, redirect
 from dotenv import load_dotenv
 from validators import url
 from urllib.parse import urlparse
-from page_analyzer.db import DataBase
+from page_analyzer.db import Database
 from page_analyzer.bs import get_status_code, get_values
 import os
 
@@ -23,8 +23,8 @@ def index():
 
 @app.get('/urls')
 def urls():
-    db = DataBase(DATABASE_URL)
-    urls = db.get_sites()
+    db = Database(DATABASE_URL)
+    urls = db.get_urls()
     db.close_conn()
     return render_template('urls.html', urls=urls)
 
@@ -35,11 +35,11 @@ def urls_post():
     name = urlparse(url_).scheme + '://' + urlparse(url_).netloc
     correct_url = url(url_)
     if not correct_url:
-        flash('Некорректный URL', 'error')
+        flash('Некорректный URL', 'danger')
         return render_template('index.html'), 422
-    db = DataBase(DATABASE_URL)
-    names = (tumple.name for tumple in db.get_name_urls())
-    if name in names:
+    db = Database(DATABASE_URL)
+    existing = db.get_url_by_name(name)
+    if existing:
         flash('Страница уже существует', 'warning')
     else:
         db.add_url(name)
@@ -51,9 +51,9 @@ def urls_post():
 
 @app.get('/urls/<id>')
 def show_url(id):
-    db = DataBase(DATABASE_URL)
-    url = db.get_site(id)
-    url_checks = db.get_checks(id)
+    db = Database(DATABASE_URL)
+    url = db.get_url(id)
+    url_checks = db.get_url_checks(id)
     db.close_conn()
     return render_template('url.html', url=url,
                            url_checks=url_checks)
@@ -61,18 +61,28 @@ def show_url(id):
 
 @app.post('/urls/<id>/checks')
 def urls_checks(id):
-    db = DataBase(DATABASE_URL)
-    url = db.get_url_name(id)
+    db = Database(DATABASE_URL)
+    url = db.get_url(id).name
     try:
         status_code = get_status_code(url)
     except Exception:
-        flash('Произошла ошибка при проверке', 'error')
+        flash('Произошла ошибка при проверке', 'danger')
         return redirect(url_for('show_url', id=id))
     h1, title, description = get_values(url)
-    db.add_checks(id, status_code, h1, title, description)
+    db.add_url_checks(id, status_code, h1, title, description)
     if status_code != 200:
-        flash('Произошла ошибка при проверке', 'error')
+        flash('Произошла ошибка при проверке', 'danger')
     else:
         flash('Страница успешно проверена', 'success')
     db.close_conn()
     return redirect(url_for('show_url', id=id))
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def page_not_found(e):
+    return render_template('500.html'), 500
