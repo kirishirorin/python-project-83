@@ -63,7 +63,7 @@ class Database():
 
     def get_url_id(self, name):
         select_query = 'SELECT id FROM urls WHERE name = %s;'
-        url_id = self.select(select_query, (name,))[0].id
+        url_id = self.select(select_query, (name,)).id
         return url_id
 
     def get_url_checks(self, url_check_id):
