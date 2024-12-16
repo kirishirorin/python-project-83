@@ -56,14 +56,14 @@ class Database():
 
     def get_url_by_name(self, name):
         select_query = 'SELECT COUNT(name) FROM urls WHERE name = %s;'
-        answer = self.select(select_query, (name,))
+        answer = self.select(select_query, (name,))[0][0]
         if answer == 0:
             return False
         return True
 
     def get_url_id(self, name):
         select_query = 'SELECT id FROM urls WHERE name = %s;'
-        url_id = self.select(select_query, (name,))
+        url_id = self.select(select_query, (name,))[0].id
         return url_id
 
     def get_url_checks(self, url_check_id):
