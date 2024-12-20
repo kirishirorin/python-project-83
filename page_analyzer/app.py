@@ -1,12 +1,12 @@
-from flask import Flask, url_for, render_template
-from flask import flash, request, redirect
-from dotenv import load_dotenv
-from validators import url
-from urllib.parse import urlparse
-from page_analyzer.db import Database
-from page_analyzer.bs import get_status_code, get_values
 import os
+from urllib.parse import urlparse
 
+from dotenv import load_dotenv
+from flask import Flask, flash, redirect, render_template, request, url_for
+from validators import url
+
+from page_analyzer.bs import get_status_code, get_values
+from page_analyzer.db import Database
 
 load_dotenv()
 DATABASE_URL = os.getenv('DATABASE_URL')

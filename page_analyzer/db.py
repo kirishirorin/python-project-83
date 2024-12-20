@@ -1,6 +1,7 @@
-from psycopg2.extras import NamedTupleCursor, RealDictCursor
 from datetime import date
+
 import psycopg2
+from psycopg2.extras import NamedTupleCursor, RealDictCursor
 
 
 class Database():
